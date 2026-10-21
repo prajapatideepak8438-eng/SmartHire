@@ -9,7 +9,7 @@ const Job = require("./models/Job");
 
 const app = express();
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -18,8 +18,7 @@ app.use(express.json());
 // =====================================================
 // MONGODB CONNECTION
 // =====================================================
-
-mongoose.connect("mongodb://127.0.0.1:27017/smarthire")
+mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/smarthire")
 
   .then(() => {
     console.log("MongoDB Connected Successfully");
@@ -129,7 +128,7 @@ app.post("/api/login", async (req, res) => {
       password
     } = req.body;
 console.log("Login Email:", email);
-console.log("Login Password:", password);
+
 
     const user = await User.findOne({
       email: email

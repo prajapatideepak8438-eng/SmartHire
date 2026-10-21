@@ -1,130 +1,48 @@
 import { useEffect, useState } from "react";
+import API_URL from "../api";
 
 function StudentDashboard() {
-
   const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState("");
-  const [location, setLocation] = useState("All");
+  const [location, setLocation] = useState("");
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
-
-
-  // ================= FETCH JOBS =================
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-
-    fetch("http://localhost:5000/api/jobs")
-
+    fetch(`${API_URL}/api/jobs`)
       .then((response) => response.json())
-
-      .then((data) => {
-
-        console.log("Jobs:", data);
-
-        setJobs(data);
-
-      })
-
-      .catch((error) => {
-
-        console.log("Jobs Error:", error);
-
-      });
-
+      .then((data) => setJobs(data))
+      .catch((error) => console.log("Jobs Error:", error));
   }, []);
 
-
-  // ================= APPLY JOB =================
-
   const handleApply = async (job) => {
-
-    alert("Applying for " + job.title);
-
-
-    if (!user) {
-
-      alert("Please login first!");
-
-      return;
-
-    }
-
-
     try {
-
-      const response = await fetch(
-        "http://localhost:5000/api/apply",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-
-            studentEmail: user.email,
-
-            jobTitle: job.title,
-
-            company: job.company
-
-          })
-
-        }
-      );
-
+      const response = await fetch(`${API_URL}/api/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          studentEmail: user.email,
+          jobTitle: job.title,
+          company: job.company
+        })
+      });
 
       const data = await response.json();
 
-
       if (response.ok) {
-
-        alert(
-          "Application submitted successfully!"
-        );
-
+        alert("Application submitted successfully!");
       } else {
-
-        alert(
-          data.message || "Application failed"
-        );
-
+        alert(data.message);
       }
-
-
     } catch (error) {
-
-      console.log(
-        "Application Error:",
-        error
-      );
-
-      alert(
-        "Backend se connection nahi ho raha hai. Check karo ki server running hai."
-      );
-
+      console.log("Apply Error:", error);
+      alert("Backend se connection nahi ho raha hai.");
     }
-
   };
 
-
-  // ================= GET LOCATIONS =================
-
-  const locations = [
-    "All",
-    ...new Set(
-      jobs.map((job) => job.location)
-    )
-  ];
-
-
-  // ================= FILTER JOBS =================
-
   const filteredJobs = jobs.filter((job) => {
-
     const searchText = search.toLowerCase();
 
     const matchesSearch =
@@ -133,183 +51,88 @@ function StudentDashboard() {
       job.location.toLowerCase().includes(searchText);
 
     const matchesLocation =
-      location === "All" ||
-      job.location === location;
+      location === "" || job.location === location;
 
     return matchesSearch && matchesLocation;
-
   });
 
-
-  // ================= UI =================
+  const locations = [...new Set(jobs.map((job) => job.location))];
 
   return (
-
-    <div>
+    <div className="dashboard-page">
 
       <h1>Student Dashboard</h1>
 
-
-      {/* ================= STUDENT PROFILE ================= */}
-
       {user && (
-
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: "20px",
-            marginBottom: "30px",
-            borderRadius: "10px",
-            background: "#f8fafc"
-          }}
-        >
-
-          <h2>👤 My Profile</h2>
-
-          <p>
-            <strong>Name:</strong> {user.name}
-          </p>
-
+        <div className="profile-box">
+          <h2>Welcome, {user.name} 👋</h2>
           <p>
             <strong>Email:</strong> {user.email}
           </p>
-
           <p>
-            <strong>Role:</strong> {user.role}
+            <strong>Role:</strong> Student
           </p>
-
         </div>
-
       )}
 
+      <div className="job-search">
+        <input
+          type="text"
+          placeholder="Search jobs, company or location..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-      {user && (
+        <select
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        >
+          <option value="">All Locations</option>
 
-        <p>
-          Welcome, <strong>{user.name}</strong>
-        </p>
-
-      )}
-
-
-      {/* ================= SEARCH ================= */}
+          {locations.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <h2>Available Jobs</h2>
 
-      <input
-        type="text"
-        placeholder="🔍 Search job, company or location..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: "90%",
-          maxWidth: "500px",
-          padding: "12px",
-          marginBottom: "15px",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          fontSize: "16px"
-        }}
-      />
-
-
-      {/* ================= LOCATION FILTER ================= */}
-
-      <br />
-
-      <select
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        style={{
-          padding: "12px",
-          marginBottom: "25px",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          fontSize: "16px"
-        }}
-      >
-
-        {locations.map((item) => (
-
-          <option
-            key={item}
-            value={item}
-          >
-            {item === "All"
-              ? "📍 All Locations"
-              : `📍 ${item}`}
-          </option>
-
-        ))}
-
-      </select>
-
-
-      {/* ================= JOB LIST ================= */}
-
       {filteredJobs.length === 0 ? (
-
-        <p>
-          No jobs found.
-        </p>
-
+        <p>No jobs found.</p>
       ) : (
-
         filteredJobs.map((job) => (
+          <div className="job-card" key={job._id}>
 
-          <div
-            key={job._id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "20px",
-              marginBottom: "20px",
-              borderRadius: "10px"
-            }}
-          >
-
-            <h3>
-              {job.title}
-            </h3>
-
+            <h2>{job.title}</h2>
 
             <p>
-              🏢 <strong>{job.company}</strong>
+              <strong>Company:</strong> {job.company}
             </p>
-
 
             <p>
-              📍 {job.location}
+              <strong>Location:</strong> {job.location}
             </p>
-
 
             <p>
-              💰 {job.salary}
+              <strong>Salary:</strong> {job.salary}
             </p>
-
 
             <p>
-              {job.description}
+              <strong>Description:</strong> {job.description}
             </p>
 
-
-            <button
-              type="button"
-              onClick={() => handleApply(job)}
-            >
+            <button onClick={() => handleApply(job)}>
               Apply Now
             </button>
 
           </div>
-
         ))
-
       )}
 
     </div>
-
   );
-
 }
-
 
 export default StudentDashboard;

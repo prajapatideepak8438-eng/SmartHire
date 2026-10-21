@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import API_URL from "../api";
 function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -12,8 +12,8 @@ function Register() {
     try {
      console.log("Sending request to backend...");
 
-const response = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
+const response = await fetch(`${API_URL}/api/register`, {
+  method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
@@ -76,6 +76,7 @@ const response = await fetch("http://localhost:5000/api/register", {
         <option value="">Select Role</option>
         <option value="student">Student</option>
         <option value="recruiter">Recruiter</option>
+        <option value="admin">Admin</option>
       </select>
 
       <br /><br />

@@ -1,45 +1,43 @@
 import { useEffect, useState } from "react";
+import API_URL from "../api";
 
 function Applicants() {
   const [applications, setApplications] = useState([]);
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/applications")
+    fetch(`${API_URL}/api/applications`)
       .then((response) => response.json())
       .then((data) => {
+        if (!user) {
+          setApplications([]);
+          return;
+        }
 
-        // Logged-in recruiter ki company
-        const companyName = user.name.toLowerCase();
-
-        // Sirf apni company ke applicants
         const myApplications = data.filter(
           (application) =>
-            application.company.toLowerCase() === companyName
+            application.company.toLowerCase() ===
+            user.name.toLowerCase()
         );
 
         setApplications(myApplications);
       })
-      .catch((error) => {
-        console.log("Error:", error);
-      });
+      .catch((error) =>
+        console.log("Applications Error:", error)
+      );
   }, []);
 
   const updateStatus = async (id, status) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/applications/${id}`,
+        `${API_URL}/api/applications/${id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            status: status
-          })
+          body: JSON.stringify({ status })
         }
       );
 
@@ -48,49 +46,54 @@ function Applicants() {
       if (response.ok) {
         alert(`Application ${status}!`);
 
-        setApplications((previousApplications) =>
-          previousApplications.map((application) =>
+        setApplications((oldApplications) =>
+          oldApplications.map((application) =>
             application._id === id
-              ? { ...application, status: status }
+              ? { ...application, status }
               : application
           )
         );
       } else {
         alert(data.message);
       }
-
     } catch (error) {
-      console.log("Error:", error);
-      alert(error.message);
+      console.log("Status Error:", error);
+      alert("Backend se connection nahi ho raha hai.");
     }
   };
 
   return (
-    <div className="jobs-page">
-      <h1>View Applicants</h1>
-
-      {user && (
-        <p>
-          Recruiter: <strong>{user.name}</strong>
-        </p>
-      )}
+    <div>
+      <h1>Applicants</h1>
 
       {applications.length === 0 ? (
-        <p>No applicants found for your company.</p>
+        <p>No applicants found.</p>
       ) : (
         applications.map((application) => (
-          <div className="job-card" key={application._id}>
-            <h2>{application.jobTitle}</h2>
-
-            <p>🏢 {application.company}</p>
+          <div
+            key={application._id}
+            style={{
+              border: "1px solid #ddd",
+              padding: "20px",
+              marginBottom: "15px",
+              borderRadius: "10px"
+            }}
+          >
+            <h3>{application.jobTitle}</h3>
 
             <p>
-              📧 Student Email: {application.studentEmail}
+              <strong>Student Email:</strong>{" "}
+              {application.studentEmail}
             </p>
 
             <p>
-              📌 Status:{" "}
-              <strong>{application.status}</strong>
+              <strong>Company:</strong>{" "}
+              {application.company}
+            </p>
+
+            <p>
+              <strong>Status:</strong>{" "}
+              {application.status}
             </p>
 
             <button
@@ -101,8 +104,10 @@ function Applicants() {
                 )
               }
             >
-              🟢 Shortlist
+              Shortlist
             </button>
+
+            {" "}
 
             <button
               onClick={() =>
@@ -112,7 +117,7 @@ function Applicants() {
                 )
               }
             >
-              🔴 Reject
+              Reject
             </button>
           </div>
         ))

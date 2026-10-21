@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API_URL from "../api";
 
 function PostJob() {
   const [title, setTitle] = useState("");
@@ -6,12 +7,9 @@ function PostJob() {
   const [salary, setSalary] = useState("");
   const [description, setDescription] = useState("");
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const handlePostJob = async () => {
-
     if (!title || !location || !salary || !description) {
       alert("Please fill all fields!");
       return;
@@ -23,58 +21,41 @@ function PostJob() {
     }
 
     try {
-
-      const response = await fetch(
-        "http://localhost:5000/api/jobs",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-            title,
-            company: user.name,
-            location,
-            salary,
-            description,
-            recruiterEmail: user.email
-          })
-        }
-      );
+      const response = await fetch(`${API_URL}/api/jobs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title,
+          company: user.name,
+          location,
+          salary,
+          description,
+          recruiterEmail: user.email
+        })
+      });
 
       const data = await response.json();
 
       if (response.ok) {
-
         alert("Job posted successfully!");
 
         setTitle("");
         setLocation("");
         setSalary("");
         setDescription("");
-
       } else {
-
         alert(data.message);
-
       }
-
     } catch (error) {
-
       console.log("Error:", error);
-
-      alert(
-        "Backend se connection nahi ho raha hai. Check karo ki server running hai."
-      );
-
+      alert("Backend se connection nahi ho raha hai.");
     }
   };
 
   return (
     <div className="register-page">
-
       <h1>Post New Job</h1>
 
       {user && (
@@ -125,7 +106,6 @@ function PostJob() {
       <button onClick={handlePostJob}>
         Post Job
       </button>
-
     </div>
   );
 }
