@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import API_URL from "../api";
 
 function Jobs() {
   const [jobs, setJobs] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/jobs")
+    fetch(`${API_URL}/api/jobs`)
       .then((response) => response.json())
       .then((data) => {
         setJobs(data);
@@ -24,6 +25,7 @@ function Jobs() {
           <p>🏢 {job.company}</p>
           <p>📍 {job.location}</p>
           <p>💰 {job.salary}</p>
+          <p>{job.description}</p>
 
           <button>Apply Now</button>
         </div>
